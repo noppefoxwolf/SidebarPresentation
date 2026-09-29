@@ -3,6 +3,8 @@ import UIKit
 
 @MainActor
 public final class AlternativeSidebar: SidebarInteraction {
+    private static let nativeSidebarWidth: CGFloat = 280
+
     private final class DelegateProxy: NSObject, SidebarInteractionDelegate,
         AlternativeSidebarViewControllerDelegate
     {
@@ -12,7 +14,7 @@ public final class AlternativeSidebar: SidebarInteraction {
             _ interaction: SidebarInteraction,
             widthForSidebar sidebarViewController: UIViewController
         ) -> CGFloat {
-            SidebarTransitionController.defaultSidebarWidth
+            return AlternativeSidebar.nativeSidebarWidth
         }
 
         func sidebarInteraction(
