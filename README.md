@@ -140,6 +140,8 @@ let interaction = SidebarInteraction(
 view.addInteraction(interaction)
 ```
 
+`presentation` accepts any `SidebarInteractionPresentation` implementation, so you can provide a custom presentation strategy with the same initializer.
+
 For lower-level transition control, use `SidebarTransitionController` directly as a view controller transitioning delegate.
 
 ## Build and test

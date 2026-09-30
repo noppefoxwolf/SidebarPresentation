@@ -2,6 +2,32 @@ import InteractiveContainerPanGestureRecognizer
 import UIKit
 
 @MainActor
+public protocol SidebarInteractionPresentation: AnyObject {
+    var isVisible: Bool { get }
+    func present(from interaction: SidebarInteraction, isInteractive: Bool)
+    func dismiss(from interaction: SidebarInteraction, animated: Bool)
+    func handlePan(_ gesture: UIPanGestureRecognizer, in interaction: SidebarInteraction)
+    func detach()
+}
+
+public extension SidebarInteractionPresentation {
+    var isVisible: Bool { false }
+    func detach() {}
+}
+
+extension SidebarInteractionPresentation where Self == ModalSidebarInteractionPresentation {
+    public static var modal: any SidebarInteractionPresentation {
+        ModalSidebarInteractionPresentation()
+    }
+}
+
+extension SidebarInteractionPresentation where Self == EmbeddedSidebarInteractionPresentation {
+    public static var embedded: any SidebarInteractionPresentation {
+        EmbeddedSidebarInteractionPresentation()
+    }
+}
+
+@MainActor
 open class SidebarInteraction: NSObject, UIInteraction {
     public weak var delegate: (any SidebarInteractionDelegate)? = nil
 
@@ -11,21 +37,21 @@ open class SidebarInteraction: NSObject, UIInteraction {
         }
     }
 
-    public let presentation: SidebarPresentation
+    public let presentation: any SidebarInteractionPresentation
 
     let presentPanGesture = InteractiveContainerPanGestureRecognizer()
 
-    private var transitionController: SidebarTransitionController?
-    private var embeddedViewController: SidebarEmbeddedViewController?
-    private weak var presentedViewController: UIViewController?
-
     public init(
         delegate: any SidebarInteractionDelegate,
-        presentation: SidebarPresentation = .modal
+        presentation: any SidebarInteractionPresentation = .modal
     ) {
         self.delegate = delegate
         self.presentation = presentation
         super.init()
+        configure()
+    }
+
+    private func configure() {
         presentPanGesture.addTarget(self, action: #selector(onPan))
     }
 
@@ -34,7 +60,8 @@ open class SidebarInteraction: NSObject, UIInteraction {
     public func willMove(to view: UIView?) {
         self.view?.removeGestureRecognizer(presentPanGesture)
         if view == nil {
-            removeEmbeddedViewController()
+            presentation.detach()
+            updatePresentGestureState()
         }
     }
 
@@ -50,135 +77,87 @@ open class SidebarInteraction: NSObject, UIInteraction {
     }
 
     public func dismiss(animated: Bool = true) {
-        switch presentation {
-        case .modal:
-            presentedViewController?.dismiss(animated: animated)
-
-        case .embedded:
-            embeddedViewController?.hide(animated: animated)
-        }
+        presentation.dismiss(from: self, animated: animated)
     }
 
     private func present(isInteractiveTransitionEnabled: Bool) {
         guard isEnabled else { return }
-
-        switch presentation {
-        case .modal:
-            presentModally(isInteractiveTransitionEnabled: isInteractiveTransitionEnabled)
-
-        case .embedded:
-            presentAsEmbedded(isInteractiveTransitionEnabled: isInteractiveTransitionEnabled)
-        }
+        presentation.present(from: self, isInteractive: isInteractiveTransitionEnabled)
     }
 
     @objc
     private func onPan(_ gesture: UIPanGestureRecognizer) {
-        switch presentation {
-        case .modal:
-            handleModalPan(gesture)
-        case .embedded:
-            handleEmbeddedPan(gesture)
-        }
+        presentation.handlePan(gesture, in: self)
     }
 
-    private func presentModally(isInteractiveTransitionEnabled: Bool) {
-        guard let parent = delegate?.viewController(for: self) else { return }
-        guard let vc = delegate?.sidebarInteraction(self, presentingViewControllerFor: parent) else {
-            return
-        }
-
-        removeEmbeddedViewController()
-
-        let sidebarWidth = width(for: vc)
-        let transitionController = SidebarTransitionController(sidebarWidth: sidebarWidth)
-        if isInteractiveTransitionEnabled {
-            transitionController.interactiveTransition = UIPercentDrivenInteractiveTransition()
-        }
-        vc.modalPresentationStyle = .custom
-        vc.transitioningDelegate = transitionController
-        vc.traitOverrides.userInterfaceLevel = .elevated
-        self.transitionController = transitionController
-        presentedViewController = vc
-        parent.present(vc, animated: true)
+    fileprivate func updatePresentGestureState() {
+        presentPanGesture.isEnabled = isEnabled && !presentation.isVisible
     }
+}
 
-    private func presentAsEmbedded(isInteractiveTransitionEnabled: Bool) {
-        guard let parent = delegate?.viewController(for: self) else { return }
+@MainActor
+public final class ModalSidebarInteractionPresentation: SidebarInteractionPresentation {
+    private var transitionController: SidebarTransitionController?
+    private weak var presentedViewController: UIViewController?
 
-        if let embeddedViewController,
-            embeddedViewController.parent === parent
-        {
-            if isInteractiveTransitionEnabled {
-                embeddedViewController.beginInteractivePresentation()
-            } else {
-                embeddedViewController.show(animated: true)
-            }
-            updatePresentGestureState()
+    public func present(from interaction: SidebarInteraction, isInteractive: Bool) {
+        guard let parent = interaction.delegate?.viewController(for: interaction) else { return }
+        guard let viewController = interaction.delegate?.sidebarInteraction(
+            interaction,
+            presentingViewControllerFor: parent
+        ) else {
             return
         }
 
-        removeEmbeddedViewController()
-
-        guard let vc = delegate?.sidebarInteraction(self, presentingViewControllerFor: parent) else {
-            return
-        }
-
-        let embeddedViewController = SidebarEmbeddedViewController(
-            sidebarViewController: vc,
-            sidebarWidth: width(for: vc)
+        let controller = SidebarTransitionController(
+            sidebarWidth: sidebarWidth(for: viewController, interaction: interaction)
         )
-        embeddedViewController.onVisibilityChanged = { [weak self] _ in
-            self?.updatePresentGestureState()
+        if isInteractive {
+            controller.interactiveTransition = UIPercentDrivenInteractiveTransition()
         }
-
-        parent.addChild(embeddedViewController)
-        embeddedViewController.view.frame = parent.view.bounds
-        embeddedViewController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        parent.view.addSubview(embeddedViewController.view)
-        embeddedViewController.didMove(toParent: parent)
-        self.embeddedViewController = embeddedViewController
-
-        if isInteractiveTransitionEnabled {
-            embeddedViewController.beginInteractivePresentation()
-        } else {
-            embeddedViewController.show(animated: true)
-        }
-        updatePresentGestureState()
+        viewController.modalPresentationStyle = .custom
+        viewController.transitioningDelegate = controller
+        viewController.traitOverrides.userInterfaceLevel = .elevated
+        transitionController = controller
+        presentedViewController = viewController
+        parent.present(viewController, animated: true)
     }
 
-    private func handleModalPan(_ gesture: UIPanGestureRecognizer) {
+    public func dismiss(from _: SidebarInteraction, animated: Bool) {
+        presentedViewController?.dismiss(animated: animated)
+    }
+
+    public func handlePan(_ gesture: UIPanGestureRecognizer, in interaction: SidebarInteraction) {
         switch gesture.state {
         case .began:
             if transitionController?.interactiveTransition == nil {
-                presentModally(isInteractiveTransitionEnabled: true)
+                present(from: interaction, isInteractive: true)
                 transitionController?.interactiveTransition?.completionCurve = .easeOut
             }
 
         case .changed:
-            if transitionController?.interactiveTransition == nil {
+            guard let interactiveTransition = transitionController?.interactiveTransition else {
                 return
             }
-
-            let fractionCompleted = SidebarGestureMetrics.presentationProgress(
+            let progress = SidebarGestureMetrics.presentationProgress(
                 translation: gesture.translation(in: gesture.view).x,
                 width: transitionController?.sidebarWidth
                     ?? SidebarTransitionController.defaultSidebarWidth
             )
-            transitionController?.interactiveTransition?.update(fractionCompleted)
+            interactiveTransition.update(progress)
 
         case .ended:
             guard let interactiveTransition = transitionController?.interactiveTransition else {
                 return
             }
-
-            let fractionCompleted = SidebarGestureMetrics.presentationProgress(
+            let progress = SidebarGestureMetrics.presentationProgress(
                 translation: gesture.translation(in: gesture.view).x,
                 width: transitionController?.sidebarWidth
                     ?? SidebarTransitionController.defaultSidebarWidth
             )
             if SidebarGestureMetrics.shouldFinishPresentation(
                 velocity: gesture.velocity(in: gesture.view).x,
-                progress: fractionCompleted
+                progress: progress
             ) {
                 interactiveTransition.finish()
             } else {
@@ -193,34 +172,98 @@ open class SidebarInteraction: NSObject, UIInteraction {
         }
     }
 
-    private func handleEmbeddedPan(_ gesture: UIPanGestureRecognizer) {
-        if embeddedViewController?.isVisible == true {
+    private func sidebarWidth(
+        for viewController: UIViewController,
+        interaction: SidebarInteraction
+    ) -> CGFloat {
+        interaction.delegate?.sidebarInteraction(interaction, widthForSidebar: viewController)
+            ?? SidebarTransitionController.defaultSidebarWidth
+    }
+}
+
+@MainActor
+public final class EmbeddedSidebarInteractionPresentation: SidebarInteractionPresentation {
+    private var embeddedViewController: SidebarEmbeddedViewController?
+
+    public var isVisible: Bool {
+        embeddedViewController?.isVisible == true
+    }
+
+    public func present(from interaction: SidebarInteraction, isInteractive: Bool) {
+        guard let parent = interaction.delegate?.viewController(for: interaction) else { return }
+
+        if let embeddedViewController,
+            embeddedViewController.parent === parent
+        {
+            if isInteractive {
+                embeddedViewController.beginInteractivePresentation()
+            } else {
+                embeddedViewController.show(animated: true)
+            }
+            interaction.updatePresentGestureState()
             return
         }
 
+        detach()
+
+        guard let viewController = interaction.delegate?.sidebarInteraction(
+            interaction,
+            presentingViewControllerFor: parent
+        ) else {
+            return
+        }
+
+        let embedded = SidebarEmbeddedViewController(
+            sidebarViewController: viewController,
+            sidebarWidth: sidebarWidth(for: viewController, interaction: interaction)
+        )
+        embedded.onVisibilityChanged = { [weak interaction] _ in
+            interaction?.updatePresentGestureState()
+        }
+
+        parent.addChild(embedded)
+        embedded.view.frame = parent.view.bounds
+        embedded.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        parent.view.addSubview(embedded.view)
+        embedded.didMove(toParent: parent)
+        embeddedViewController = embedded
+
+        if isInteractive {
+            embedded.beginInteractivePresentation()
+        } else {
+            embedded.show(animated: true)
+        }
+        interaction.updatePresentGestureState()
+    }
+
+    public func dismiss(from _: SidebarInteraction, animated: Bool) {
+        embeddedViewController?.hide(animated: animated)
+    }
+
+    public func handlePan(_ gesture: UIPanGestureRecognizer, in interaction: SidebarInteraction) {
+        guard !isVisible else { return }
+
         switch gesture.state {
         case .began:
-            presentAsEmbedded(isInteractiveTransitionEnabled: true)
+            present(from: interaction, isInteractive: true)
 
         case .changed:
             guard let embeddedViewController else { return }
-
-            let fractionCompleted = SidebarGestureMetrics.presentationProgress(
+            let progress = SidebarGestureMetrics.presentationProgress(
                 translation: gesture.translation(in: gesture.view).x,
                 width: embeddedViewController.sidebarWidth
             )
-            embeddedViewController.updateInteractivePresentation(fractionCompleted)
+            embeddedViewController.updateInteractivePresentation(progress)
 
         case .ended:
             guard let embeddedViewController else { return }
-
-            let fractionCompleted = SidebarGestureMetrics.presentationProgress(
+            let progress = SidebarGestureMetrics.presentationProgress(
                 translation: gesture.translation(in: gesture.view).x,
                 width: embeddedViewController.sidebarWidth
             )
             if SidebarGestureMetrics.shouldFinishPresentation(
                 velocity: gesture.velocity(in: gesture.view).x,
-                progress: fractionCompleted
+                progress: progress
             ) {
                 embeddedViewController.finishInteractivePresentation()
             } else {
@@ -235,18 +278,16 @@ open class SidebarInteraction: NSObject, UIInteraction {
         }
     }
 
-    private func width(for sidebarViewController: UIViewController) -> CGFloat {
-        delegate?.sidebarInteraction(self, widthForSidebar: sidebarViewController)
-            ?? SidebarTransitionController.defaultSidebarWidth
-    }
-
-    private func updatePresentGestureState() {
-        presentPanGesture.isEnabled = isEnabled && embeddedViewController?.isVisible != true
-    }
-
-    private func removeEmbeddedViewController() {
+    public func detach() {
         embeddedViewController?.detachFromParent()
         embeddedViewController = nil
-        updatePresentGestureState()
+    }
+
+    private func sidebarWidth(
+        for viewController: UIViewController,
+        interaction: SidebarInteraction
+    ) -> CGFloat {
+        interaction.delegate?.sidebarInteraction(interaction, widthForSidebar: viewController)
+            ?? SidebarTransitionController.defaultSidebarWidth
     }
 }
