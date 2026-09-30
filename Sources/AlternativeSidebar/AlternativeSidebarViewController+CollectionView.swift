@@ -15,19 +15,27 @@ extension AlternativeSidebarViewController {
             cell.accessories = []
             cell.accessibilityIdentifier = "alternativeSidebar.tab.\(tabIndex)"
             cell.configurationUpdateHandler = { cell, state in
-                let foregroundColor: UIColor = state.isSelected ? .white : .label
-                let imageTintColor: UIColor = state.isSelected ? .white : .tintColor
-
                 var content = UIListContentConfiguration.cell()
                 content.text = title
                 content.secondaryText = tab.subtitle
                 content.image = image
-                content.textProperties.color = foregroundColor
-                content.secondaryTextProperties.color = foregroundColor
-                content.imageProperties.tintColor = imageTintColor
+                content.textProperties.color = .label
+                content.textProperties.adjustsFontForContentSizeCategory = true
+                content.secondaryTextProperties.color = .secondaryLabel
+                let bodyFont = UIFont.preferredFont(forTextStyle: .body)
+                if state.isSelected {
+                    let mediumDescriptor = bodyFont.fontDescriptor.addingAttributes([
+                        .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.medium.rawValue]
+                    ])
+                    content.textProperties.font = UIFont(descriptor: mediumDescriptor, size: 0)
+                } else {
+                    content.textProperties.font = bodyFont
+                }
+                content.imageProperties.tintColor = .tintColor
 
                 var background = UIBackgroundConfiguration.listCell()
-                background.backgroundColor = state.isSelected ? .tintColor : .clear
+                background.backgroundColor = state.isSelected ? .quaternarySystemFill : .clear
+                background.cornerRadius = 26
                 cell.backgroundConfiguration = background
                 cell.contentConfiguration = content
             }
