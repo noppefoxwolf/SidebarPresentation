@@ -89,7 +89,7 @@ public final class AlternativeSidebar: SidebarInteraction {
         let delegateProxy = DelegateProxy()
         self.delegateProxy = delegateProxy
         self.tabBarController = tabBarController
-        super.init(delegate: delegateProxy)
+        super.init(delegate: delegateProxy, presentation: .embedded)
         delegateProxy.owner = self
 
         updateAvailability()
