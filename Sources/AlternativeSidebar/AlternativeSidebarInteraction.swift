@@ -126,17 +126,22 @@ final class AlternativeSidebarInteraction: SidebarInteraction {
             return
         }
 
-        let shouldEnable: Bool
+        let isNativeSidebarAvailable: Bool
+        let isNativeSidebarVisible: Bool
         if #available(iOS 27.0, *) {
-            shouldEnable = !tabBarController.sidebar.isAvailable
+            isNativeSidebarAvailable = tabBarController.sidebar.isAvailable
+            isNativeSidebarVisible =
+                isNativeSidebarAvailable && !tabBarController.sidebar.isHidden
         } else {
-            shouldEnable = tabBarController.traitCollection.horizontalSizeClass == .compact
+            isNativeSidebarAvailable =
+                tabBarController.traitCollection.horizontalSizeClass != .compact
+            isNativeSidebarVisible = isNativeSidebarAvailable
         }
 
-        isAvailableForInteraction = shouldEnable
-        super.isEnabled = userIsEnabled && shouldEnable
-        if !shouldEnable, !isHidden {
-            dismiss()
+        isAvailableForInteraction = !isNativeSidebarAvailable
+        super.isEnabled = userIsEnabled && !isNativeSidebarAvailable
+        if isNativeSidebarVisible, !isHidden {
+            dismiss(animated: false)
         }
     }
 

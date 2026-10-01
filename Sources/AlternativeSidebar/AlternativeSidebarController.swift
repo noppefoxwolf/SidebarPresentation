@@ -37,6 +37,17 @@ public final class AlternativeSidebarController: UIViewController {
         ])
         contentTabBarController.didMove(toParent: self)
     }
+
+    public override func viewWillTransition(
+        to size: CGSize,
+        with coordinator: any UIViewControllerTransitionCoordinator
+    ) {
+        super.viewWillTransition(to: size, with: coordinator)
+
+        coordinator.animate(alongsideTransition: nil) { [weak self] _ in
+            self?.alternativeSidebarInstance.interaction.updateAvailability()
+        }
+    }
 }
 
 @MainActor
