@@ -132,6 +132,36 @@ public final class AlternativeSidebarViewController: UIViewController {
         updateBottomBarView()
     }
 
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+
+        updateCollectionViewInsetsForBottomBar()
+    }
+
+    func updateCollectionViewInsetsForBottomBar() {
+        let bottomBarInset = bottomBarViewContainer.isHidden
+            ? 0
+            : max(
+                bottomBarViewContainer.bounds.height,
+                bottomBarViewContainer.systemLayoutSizeFitting(
+                    UIView.layoutFittingCompressedSize
+                ).height
+            )
+        guard abs(collectionView.contentInset.bottom - bottomBarInset) > 0.5
+            || abs(collectionView.verticalScrollIndicatorInsets.bottom - bottomBarInset) > 0.5
+        else {
+            return
+        }
+
+        var contentInsets = collectionView.contentInset
+        contentInsets.bottom = bottomBarInset
+        collectionView.contentInset = contentInsets
+
+        var indicatorInsets = collectionView.verticalScrollIndicatorInsets
+        indicatorInsets.bottom = bottomBarInset
+        collectionView.verticalScrollIndicatorInsets = indicatorInsets
+    }
+
     private func configureCloseButton() {
         let closeButton = UIBarButtonItem(
             image: UIImage(systemName: "platter.filled.bottom.iphone"),

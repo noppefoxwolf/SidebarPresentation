@@ -49,7 +49,7 @@ extension AlternativeSidebarViewController {
                 equalTo: contentContainerView.trailingAnchor
             ),
             bottomBarViewContainer.bottomAnchor.constraint(
-                equalTo: contentContainerView.bottomAnchor
+                equalTo: contentContainerView.safeAreaLayoutGuide.bottomAnchor
             ),
         ])
         bottomBarViewContainer.isHidden = true
@@ -96,5 +96,7 @@ extension AlternativeSidebarViewController {
     func updateBottomBarView() {
         guard isViewLoaded else { return }
         updateBottomBarViewLayout()
+        updateCollectionViewInsetsForBottomBar()
+        view.setNeedsLayout()
     }
 }
