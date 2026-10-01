@@ -54,6 +54,13 @@ final class AlternativeSidebarInteraction: SidebarInteraction {
         }
     }
 
+    override var keepsPresentPanGestureEnabled: Bool {
+        if #available(iOS 27.0, *) {
+            return userIsEnabled
+        }
+        return isEnabled
+    }
+
     var headerContentConfiguration: UIContentConfiguration? {
         didSet {
             presentedSidebarViewController?.headerConfiguration = headerContentConfiguration
@@ -98,12 +105,18 @@ final class AlternativeSidebarInteraction: SidebarInteraction {
             target: self,
             action: #selector(updateAvailability)
         )
+        updateAvailability()
     }
 
     isolated deinit {
         if let traitChangeRegistration, let containerViewController {
             containerViewController.unregisterForTraitChanges(traitChangeRegistration)
         }
+    }
+
+    override func shouldBeginPresentPanGesture() -> Bool {
+        updateAvailability()
+        return isEnabled
     }
 
     @objc

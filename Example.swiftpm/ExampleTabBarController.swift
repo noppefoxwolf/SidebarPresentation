@@ -125,5 +125,4 @@ final class ExampleTabBarController: UITabBarController {
         alternativeSidebar!.footerContentConfiguration = sidebarFooterConfiguration
         alternativeSidebar!.bottomBarView = ExampleSidebarBottomView()
     }
-
 }

@@ -21,6 +21,7 @@ package final class InteractiveContainerPanGestureRecognizer: UIPanGestureRecogn
     var behavior: [Behavior] = [.pageViewController, .scrollView, .popInteraction]
     var direction: Direction = .right
     var isDebugLoggingEnabled = false
+    package var shouldBeginHandler: (() -> Bool)?
 
     weak var trackedTouchView: UIView?
 

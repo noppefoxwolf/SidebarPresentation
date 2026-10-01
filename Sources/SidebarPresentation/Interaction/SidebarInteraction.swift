@@ -27,6 +27,17 @@ open class SidebarInteraction: NSObject, UIInteraction {
 
     private func configure() {
         presentPanGesture.addTarget(self, action: #selector(onPan))
+        presentPanGesture.shouldBeginHandler = { [weak self] in
+            self?.shouldBeginPresentPanGesture() ?? false
+        }
+    }
+
+    open var keepsPresentPanGestureEnabled: Bool {
+        isEnabled
+    }
+
+    open func shouldBeginPresentPanGesture() -> Bool {
+        isEnabled
     }
 
     public weak var view: UIView? = nil
@@ -65,7 +76,6 @@ open class SidebarInteraction: NSObject, UIInteraction {
     }
 
     func updatePresentGestureState() {
-        presentPanGesture.isEnabled = isEnabled && !presentation.isVisible
+        presentPanGesture.isEnabled = keepsPresentPanGestureEnabled && !presentation.isVisible
     }
 }
-

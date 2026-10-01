@@ -135,6 +135,9 @@ extension InteractiveContainerPanGestureRecognizer {
         guard gestureRecognizer === self, let rootView = view else {
             return true
         }
+        guard shouldBeginHandler?() ?? true else {
+            return false
+        }
 
         let location = location(in: rootView)
         let velocity = velocity(in: rootView)
