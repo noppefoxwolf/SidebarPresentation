@@ -30,15 +30,10 @@ final class SidebarEmbeddedViewController: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
-    override func loadView() {
-        view = UIView()
-        view.backgroundColor = .clear
-    }
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         dimmingView.alpha = 0
         dimmingView.addInteraction(
             TapActionInteraction { [weak self] in
@@ -58,6 +53,7 @@ final class SidebarEmbeddedViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        guard presentationAnimator?.isRunning != true else { return }
         updateViewForProgress()
     }
 
@@ -110,6 +106,7 @@ final class SidebarEmbeddedViewController: UIViewController {
 
     private func animate(to targetProgress: CGFloat, animated: Bool) {
         stopPresentationAnimator()
+        updateViewForProgress()
 
         let targetProgress = min(max(targetProgress, 0), 1)
         let startProgress = presentationProgress
