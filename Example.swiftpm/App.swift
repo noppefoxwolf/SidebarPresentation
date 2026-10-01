@@ -1,4 +1,5 @@
 import SidebarPresentation
+import AlternativeSidebar
 import SwiftUI
 
 @main
@@ -13,7 +14,11 @@ struct App: SwiftUI.App {
 
 struct ContentView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> some UIViewController {
-        ExampleTabBarController()
+        let tabBarController = ExampleTabBarController()
+        let container = AlternativeSidebarController(
+            tabBarController: tabBarController
+        )
+        return container
     }
 
     func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {

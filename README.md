@@ -48,7 +48,8 @@ Use `.product(name: "SidebarPresentation", package: "SidebarPresentation")` inst
 
 ## Ready-to-use sidebar
 
-Import `AlternativeSidebar` and access the convenience APIs on your tab bar controller:
+Wrap your tab bar controller in `AlternativeSidebarController`. The container
+owns the tab bar controller as a child and hosts the embedded sidebar presentation above it:
 
 ```swift
 import AlternativeSidebar
@@ -56,35 +57,43 @@ import UIKit
 
 @MainActor
 final class TabBarController: UITabBarController {
-    func presentSidebar() {
-        preferredSidebar.isHidden.toggle()
-    }
-
     func configureSidebars() {
         let header = UIListContentConfiguration.header()
         let footer = UIListContentConfiguration.footer()
 
-        // Configure the native and alternative sidebars independently.
+        // Configure the native sidebar on the tab bar controller.
         sidebar.headerContentConfiguration = header
         sidebar.footerContentConfiguration = footer
         sidebar.bottomBarView = makeSidebarBottomView()
-
-        alternativeSidebar.headerContentConfiguration = header
-        alternativeSidebar.footerContentConfiguration = footer
-        alternativeSidebar.bottomBarView = makeSidebarBottomView()
     }
+}
 
-    private func makeSidebarBottomView() -> UIView {
-        UIView()
-    }
+@MainActor
+func makeRootViewController() -> UIViewController {
+    let tabs = TabBarController()
+    let container = AlternativeSidebarController(tabBarController: tabs)
+
+    container.alternativeSidebar.headerContentConfiguration = UIListContentConfiguration.header()
+    container.alternativeSidebar.footerContentConfiguration = UIListContentConfiguration.footer()
+    container.alternativeSidebar.bottomBarView = makeSidebarBottomView()
+    return container
+}
+
+func makeSidebarBottomView() -> UIView {
+    UIView()
 }
 ```
 
-`preferredSidebar` presents the native `sidebar` when it is available on iOS 27 and later. Otherwise, it presents `alternativeSidebar`. On iOS 26 and earlier, the alternative interaction is enabled only in a compact horizontal size class.
+`preferredSidebar` presents the native `sidebar` when it is available on iOS 27 and later. Otherwise, it presents the container's `alternativeSidebar`. On iOS 26 and earlier, the alternative interaction is enabled only in a compact horizontal size class.
 
-Accessing `alternativeSidebar` creates and installs its interaction automatically. It provides configuration for the header, footer, and bottom view, manages tab selection, and dismisses the sidebar after a tab is selected.
+`container.alternativeSidebar` is the configuration object for the fallback sidebar. The container installs the underlying interaction automatically, manages tab selection, and dismisses the sidebar after a tab is selected.
 
-Use `alternativeSidebar.isEnabled` to disable the fallback interaction and `alternativeSidebar.isHidden` to control it directly.
+Inside the embedded tab bar controller, use `tabBarController.alternativeSidebar` to access the same configuration object. It is `nil` unless the tab bar controller is hosted by `AlternativeSidebarController`.
+
+Use `container.alternativeSidebar.isEnabled` to disable the fallback interaction and
+`container.alternativeSidebar.isHidden` to control it directly. Use
+`container.preferredSidebar.isHidden` when you want the native sidebar on iOS 27 and later and the
+alternative sidebar on earlier systems.
 
 ## Custom presentation
 

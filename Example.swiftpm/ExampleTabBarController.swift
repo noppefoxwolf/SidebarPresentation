@@ -8,8 +8,6 @@ final class ExampleTabBarController: UITabBarController {
 
         mode = .tabSidebar
 
-        updateSidebarSettings()
-
         let plainViewController = UINavigationController(
             rootViewController: PlainViewController()
         )
@@ -70,7 +68,10 @@ final class ExampleTabBarController: UITabBarController {
                 viewController: settingsViewController
             ),
         ]
-
+    }
+    
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
         configureSidebar()
     }
 
@@ -95,10 +96,10 @@ final class ExampleTabBarController: UITabBarController {
     }
 
     func updateSidebarSettings() {
-        alternativeSidebar.isEnabled = ExampleSettings.shared.isSidebarEnabled
+        self.alternativeSidebar?.isEnabled = ExampleSettings.shared.isSidebarEnabled
     }
 
-    private var sidebarHeaderConfiguration: UIContentConfiguration {
+    var sidebarHeaderConfiguration: UIContentConfiguration {
         var configuration = UIListContentConfiguration.header()
         configuration.text = "SidebarSample"
         configuration.secondaryText = "SidebarPresentation"
@@ -107,20 +108,22 @@ final class ExampleTabBarController: UITabBarController {
         return configuration
     }
 
-    private var sidebarFooterConfiguration: UIContentConfiguration {
+    var sidebarFooterConfiguration: UIContentConfiguration {
         var configuration = UIListContentConfiguration.footer()
         configuration.text = "Swipe right to close"
         return configuration
     }
 
+    // workaround: UITabBarControllerはinitの時点でviewDidLoadを行うので、parentが不在になるためviewIsAppearingで呼ぶこと
     private func configureSidebar() {
         sidebar.headerContentConfiguration = sidebarHeaderConfiguration
         sidebar.footerContentConfiguration = sidebarFooterConfiguration
         sidebar.bottomBarView = ExampleSidebarBottomView()
-
-        alternativeSidebar.headerContentConfiguration = sidebarHeaderConfiguration
-        alternativeSidebar.footerContentConfiguration = sidebarFooterConfiguration
-        alternativeSidebar.bottomBarView = ExampleSidebarBottomView()
+        
+        alternativeSidebar!.isEnabled = ExampleSettings.shared.isSidebarEnabled
+        alternativeSidebar!.headerContentConfiguration = sidebarHeaderConfiguration
+        alternativeSidebar!.footerContentConfiguration = sidebarFooterConfiguration
+        alternativeSidebar!.bottomBarView = ExampleSidebarBottomView()
     }
 
 }

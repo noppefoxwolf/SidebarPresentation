@@ -11,8 +11,12 @@ extension AlternativeSidebarViewController {
     }
 
     func configureLayout() {
-        materialBackgroundView.contentView.addSubview(collectionView)
-        materialBackgroundView.contentView.addSubview(bottomViewContainer)
+        contentStackView.axis = .vertical
+        contentStackView.alignment = .fill
+        contentStackView.distribution = .fill
+        contentStackView.addArrangedSubview(collectionView)
+        contentStackView.addArrangedSubview(bottomViewContainer)
+        materialBackgroundView.contentView.addSubview(contentStackView)
 
         bottomViewContainer.directionalLayoutMargins = NSDirectionalEdgeInsets(
             top: 8,
@@ -21,33 +25,23 @@ extension AlternativeSidebarViewController {
             trailing: 12
         )
 
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        contentStackView.translatesAutoresizingMaskIntoConstraints = false
         bottomViewContainer.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(
+            contentStackView.topAnchor.constraint(
                 equalTo: materialBackgroundView.contentView.topAnchor
             ),
-            collectionView.leadingAnchor.constraint(
+            contentStackView.leadingAnchor.constraint(
                 equalTo: materialBackgroundView.contentView.leadingAnchor
             ),
-            collectionView.trailingAnchor.constraint(
+            contentStackView.trailingAnchor.constraint(
                 equalTo: materialBackgroundView.contentView.trailingAnchor
             ),
-            collectionView.bottomAnchor.constraint(
-                equalTo: materialBackgroundView.contentView.bottomAnchor
-            ),
-            bottomViewContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bottomViewContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            bottomViewContainer.bottomAnchor.constraint(
+            contentStackView.bottomAnchor.constraint(
                 equalTo: view.safeAreaLayoutGuide.bottomAnchor
             ),
         ])
-
-        let emptyHeightConstraint = bottomViewContainer.heightAnchor.constraint(
-            equalToConstant: 0
-        )
-        emptyHeightConstraint.isActive = true
-        bottomViewContainerHeightConstraint = emptyHeightConstraint
+        bottomViewContainer.isHidden = true
 
         if #available(iOS 26.0, *) {
             let interaction = UIScrollEdgeElementContainerInteraction()
@@ -64,12 +58,10 @@ extension AlternativeSidebarViewController {
 
         guard let bottomView else {
             bottomViewContainer.isHidden = true
-            bottomViewContainerHeightConstraint?.isActive = true
             return
         }
 
         bottomViewContainer.isHidden = false
-        bottomViewContainerHeightConstraint?.isActive = false
         bottomViewContainer.addSubview(bottomView)
         bottomView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -93,13 +85,5 @@ extension AlternativeSidebarViewController {
     func updateBottomView() {
         guard isViewLoaded else { return }
         updateBottomViewLayout()
-    }
-
-    func updateBottomViewInsets() {
-        let bottomInset = bottomViewContainer.isHidden ? 0 : bottomViewContainer.bounds.height
-        guard collectionView.contentInset.bottom != bottomInset else { return }
-
-        collectionView.contentInset.bottom = bottomInset
-        collectionView.verticalScrollIndicatorInsets.bottom = bottomInset
     }
 }

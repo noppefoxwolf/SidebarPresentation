@@ -16,7 +16,7 @@ public final class PreferredSidebar {
                 return tabBarController.sidebar.isHidden
             }
 
-            return tabBarController.alternativeSidebar.isHidden
+            return tabBarController.alternativeSidebar?.isHidden ?? true
         }
         set {
             guard let tabBarController else { return }
@@ -24,9 +24,16 @@ public final class PreferredSidebar {
             if #available(iOS 27.0, *), tabBarController.sidebar.isAvailable {
                 tabBarController.sidebar.isHidden = newValue
             } else {
-                tabBarController.alternativeSidebar.isHidden = newValue
+                tabBarController.alternativeSidebar?.isHidden = newValue
             }
         }
+    }
+}
+
+@MainActor
+public extension AlternativeSidebarController {
+    var preferredSidebar: PreferredSidebar {
+        PreferredSidebar(tabBarController: contentTabBarController)
     }
 }
 

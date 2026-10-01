@@ -11,6 +11,7 @@ public protocol AlternativeSidebarViewControllerDelegate: AnyObject {
 @MainActor
 public final class AlternativeSidebarViewController: UIViewController {
     internal let tabs: [UITab]
+    internal var onDismissRequested: (() -> Void)?
 
     public weak var delegate: (any AlternativeSidebarViewControllerDelegate)?
 
@@ -48,7 +49,7 @@ public final class AlternativeSidebarViewController: UIViewController {
 
     internal let bottomViewContainer = UIView()
     internal var bottomViewConstraints: [NSLayoutConstraint] = []
-    internal var bottomViewContainerHeightConstraint: NSLayoutConstraint?
+    internal let contentStackView = UIStackView()
 
     internal let collectionView: UICollectionView
 
@@ -131,11 +132,6 @@ public final class AlternativeSidebarViewController: UIViewController {
         updateBottomView()
     }
 
-    public override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        updateBottomViewInsets()
-    }
-
     private func configureCloseButton() {
         let closeButton = UIBarButtonItem(
             image: UIImage(systemName: "platter.filled.bottom.iphone"),
@@ -145,7 +141,7 @@ public final class AlternativeSidebarViewController: UIViewController {
         )
         closeButton.accessibilityLabel = "Close Sidebar"
         closeButton.primaryAction = UIAction { [weak self] _ in
-            self?.navigationController?.dismiss(animated: true)
+            self?.onDismissRequested?()
         }
         navigationItem.rightBarButtonItem = closeButton
     }
