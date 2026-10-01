@@ -69,6 +69,48 @@ final class PlainViewController: ExampleSidebarViewController {
 }
 
 @MainActor
+final class DummyTabViewController: ExampleSidebarViewController {
+    private let sampleTitle: String
+
+    init(title: String) {
+        sampleTitle = title
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = sampleTitle
+
+        let titleLabel = UILabel()
+        titleLabel.font = .preferredFont(forTextStyle: .largeTitle)
+        titleLabel.text = sampleTitle
+        titleLabel.textAlignment = .center
+
+        let detailLabel = UILabel()
+        detailLabel.font = .preferredFont(forTextStyle: .body)
+        detailLabel.textColor = .secondaryLabel
+        detailLabel.text = "Placeholder tab for testing sidebar navigation."
+        detailLabel.textAlignment = .center
+        detailLabel.numberOfLines = 0
+
+        let stackView = UIStackView(arrangedSubviews: [titleLabel, detailLabel])
+        stackView.axis = .vertical
+        stackView.spacing = 12
+        view.addSubview(stackView)
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            view.trailingAnchor.constraint(equalTo: stackView.trailingAnchor, constant: 24),
+            stackView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
+    }
+}
+
+@MainActor
 final class PageViewController: ExampleSidebarViewController, UIPageViewControllerDataSource {
     private let pages = [
         ExamplePageViewController(title: "Page 1", color: .systemBlue),

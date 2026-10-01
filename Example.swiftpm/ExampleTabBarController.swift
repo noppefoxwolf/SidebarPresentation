@@ -61,6 +61,7 @@ final class ExampleTabBarController: UITabBarController {
                 identifier: "nested",
                 viewController: nestedCollectionViewController
             ),
+        ] + makeDummyTabs() + [
             makeTab(
                 title: "Settings",
                 imageName: "gearshape",
@@ -68,6 +69,36 @@ final class ExampleTabBarController: UITabBarController {
                 viewController: settingsViewController
             ),
         ]
+    }
+
+    private func makeDummyTabs() -> [UITab] {
+        let symbols = [
+            "tray",
+            "star",
+            "bookmark",
+            "clock",
+            "bell",
+            "person",
+            "folder",
+            "tag",
+            "paperplane",
+            "ellipsis",
+        ]
+
+        return symbols.enumerated().map { index, symbol in
+            let number = index + 1
+            let title = "Sample \(number)"
+            let viewController = UINavigationController(
+                rootViewController: DummyTabViewController(title: title)
+            )
+
+            return makeTab(
+                title: title,
+                imageName: symbol,
+                identifier: "sample-\(number)",
+                viewController: viewController
+            )
+        }
     }
     
     override func viewIsAppearing(_ animated: Bool) {
