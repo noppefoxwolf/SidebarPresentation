@@ -63,19 +63,19 @@ final class AlternativeSidebarInteraction: SidebarInteraction {
 
     var headerContentConfiguration: UIContentConfiguration? {
         didSet {
-            presentedSidebarViewController?.headerConfiguration = headerContentConfiguration
+            presentedSidebarViewController?.headerContentConfiguration = headerContentConfiguration
         }
     }
 
     var footerContentConfiguration: UIContentConfiguration? {
         didSet {
-            presentedSidebarViewController?.footerConfiguration = footerContentConfiguration
+            presentedSidebarViewController?.footerContentConfiguration = footerContentConfiguration
         }
     }
 
     var bottomBarView: UIView? {
         didSet {
-            presentedSidebarViewController?.bottomView = bottomBarView
+            presentedSidebarViewController?.bottomBarView = bottomBarView
         }
     }
 
@@ -146,9 +146,9 @@ final class AlternativeSidebarInteraction: SidebarInteraction {
         let viewController = AlternativeSidebarViewController(
             tabs: tabBarController.tabs,
             selectedTab: tabBarController.selectedTab,
-            headerConfiguration: headerContentConfiguration,
-            footerConfiguration: footerContentConfiguration,
-            bottomView: bottomBarView
+            headerContentConfiguration: headerContentConfiguration,
+            footerContentConfiguration: footerContentConfiguration,
+            bottomBarView: bottomBarView
         )
         viewController.delegate = delegateProxy
         viewController.onDismissRequested = { [weak self] in

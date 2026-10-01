@@ -21,7 +21,7 @@ public final class AlternativeSidebarViewController: UIViewController {
         }
     }
 
-    public var headerConfiguration: UIContentConfiguration? {
+    public var headerContentConfiguration: UIContentConfiguration? {
         didSet {
             if isViewLoaded {
                 collectionView.reloadData()
@@ -29,7 +29,7 @@ public final class AlternativeSidebarViewController: UIViewController {
         }
     }
 
-    public var footerConfiguration: UIContentConfiguration? {
+    public var footerContentConfiguration: UIContentConfiguration? {
         didSet {
             if isViewLoaded {
                 collectionView.reloadData()
@@ -37,9 +37,9 @@ public final class AlternativeSidebarViewController: UIViewController {
         }
     }
 
-    public var bottomView: UIView? {
+    public var bottomBarView: UIView? {
         didSet {
-            updateBottomView()
+            updateBottomBarView()
         }
     }
 
@@ -47,9 +47,9 @@ public final class AlternativeSidebarViewController: UIViewController {
         view as! UIVisualEffectView
     }
 
-    internal let bottomViewContainer = UIView()
-    internal var bottomViewConstraints: [NSLayoutConstraint] = []
-    internal let contentStackView = UIStackView()
+    internal let bottomBarViewContainer = UIView()
+    internal var bottomBarViewConstraints: [NSLayoutConstraint] = []
+    internal let contentContainerView = UIView()
 
     internal let collectionView: UICollectionView
 
@@ -61,15 +61,15 @@ public final class AlternativeSidebarViewController: UIViewController {
     public init(
         tabs: [UITab],
         selectedTab: UITab? = nil,
-        headerConfiguration: UIContentConfiguration? = nil,
-        footerConfiguration: UIContentConfiguration? = nil,
-        bottomView: UIView? = nil
+        headerContentConfiguration: UIContentConfiguration? = nil,
+        footerContentConfiguration: UIContentConfiguration? = nil,
+        bottomBarView: UIView? = nil
     ) {
         self.tabs = tabs.filter { !$0.isHidden }
         self.selectedTab = selectedTab
-        self.headerConfiguration = headerConfiguration
-        self.footerConfiguration = footerConfiguration
-        self.bottomView = bottomView
+        self.headerContentConfiguration = headerContentConfiguration
+        self.footerContentConfiguration = footerContentConfiguration
+        self.bottomBarView = bottomBarView
 
         var layoutConfiguration = UICollectionLayoutListConfiguration(appearance: .sidebar)
         layoutConfiguration.showsSeparators = false
@@ -102,9 +102,9 @@ public final class AlternativeSidebarViewController: UIViewController {
         self.init(
             tabs: tabBarController.tabs,
             selectedTab: tabBarController.selectedTab,
-            headerConfiguration: tabBarController.sidebar.headerContentConfiguration,
-            footerConfiguration: tabBarController.sidebar.footerContentConfiguration,
-            bottomView: tabBarController.sidebar.bottomBarView
+            headerContentConfiguration: tabBarController.sidebar.headerContentConfiguration,
+            footerContentConfiguration: tabBarController.sidebar.footerContentConfiguration,
+            bottomBarView: tabBarController.sidebar.bottomBarView
         )
     }
 
@@ -113,7 +113,7 @@ public final class AlternativeSidebarViewController: UIViewController {
     }
 
     isolated deinit {
-        bottomView?.removeFromSuperview()
+        bottomBarView?.removeFromSuperview()
     }
 
     public override func loadView() {
@@ -129,7 +129,7 @@ public final class AlternativeSidebarViewController: UIViewController {
         configureLayout()
         setContentScrollView(collectionView, for: .bottom)
         applySnapshot()
-        updateBottomView()
+        updateBottomBarView()
     }
 
     private func configureCloseButton() {

@@ -11,79 +11,90 @@ extension AlternativeSidebarViewController {
     }
 
     func configureLayout() {
-        contentStackView.axis = .vertical
-        contentStackView.alignment = .fill
-        contentStackView.distribution = .fill
-        contentStackView.addArrangedSubview(collectionView)
-        contentStackView.addArrangedSubview(bottomViewContainer)
-        materialBackgroundView.contentView.addSubview(contentStackView)
+        materialBackgroundView.contentView.addSubview(contentContainerView)
+        contentContainerView.addSubview(collectionView)
+        contentContainerView.addSubview(bottomBarViewContainer)
 
-        bottomViewContainer.directionalLayoutMargins = NSDirectionalEdgeInsets(
+        bottomBarViewContainer.directionalLayoutMargins = NSDirectionalEdgeInsets(
             top: 8,
             leading: 12,
-            bottom: 8,
+            bottom: 0,
             trailing: 12
         )
 
-        contentStackView.translatesAutoresizingMaskIntoConstraints = false
-        bottomViewContainer.translatesAutoresizingMaskIntoConstraints = false
+        contentContainerView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        bottomBarViewContainer.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            contentStackView.topAnchor.constraint(
+            contentContainerView.topAnchor.constraint(
                 equalTo: materialBackgroundView.contentView.topAnchor
             ),
-            contentStackView.leadingAnchor.constraint(
+            contentContainerView.leadingAnchor.constraint(
                 equalTo: materialBackgroundView.contentView.leadingAnchor
             ),
-            contentStackView.trailingAnchor.constraint(
+            contentContainerView.trailingAnchor.constraint(
                 equalTo: materialBackgroundView.contentView.trailingAnchor
             ),
-            contentStackView.bottomAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.bottomAnchor
+            contentContainerView.bottomAnchor.constraint(
+                equalTo: view.bottomAnchor
+            ),
+            collectionView.topAnchor.constraint(equalTo: contentContainerView.topAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: contentContainerView.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: contentContainerView.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: contentContainerView.bottomAnchor),
+            bottomBarViewContainer.leadingAnchor.constraint(
+                equalTo: contentContainerView.leadingAnchor
+            ),
+            bottomBarViewContainer.trailingAnchor.constraint(
+                equalTo: contentContainerView.trailingAnchor
+            ),
+            bottomBarViewContainer.bottomAnchor.constraint(
+                equalTo: contentContainerView.bottomAnchor
             ),
         ])
-        bottomViewContainer.isHidden = true
+        bottomBarViewContainer.isHidden = true
 
         if #available(iOS 26.0, *) {
             let interaction = UIScrollEdgeElementContainerInteraction()
             interaction.scrollView = collectionView
             interaction.edge = .bottom
-            bottomViewContainer.addInteraction(interaction)
+            bottomBarViewContainer.addInteraction(interaction)
         }
     }
 
-    func updateBottomViewLayout() {
-        bottomViewConstraints.forEach { $0.isActive = false }
-        bottomViewConstraints.removeAll()
-        bottomViewContainer.subviews.forEach { $0.removeFromSuperview() }
+    func updateBottomBarViewLayout() {
+        bottomBarViewConstraints.forEach { $0.isActive = false }
+        bottomBarViewConstraints.removeAll()
+        bottomBarViewContainer.subviews.forEach { $0.removeFromSuperview() }
 
-        guard let bottomView else {
-            bottomViewContainer.isHidden = true
+        guard let bottomBarView else {
+            bottomBarViewContainer.isHidden = true
             return
         }
 
-        bottomViewContainer.isHidden = false
-        bottomViewContainer.addSubview(bottomView)
-        bottomView.translatesAutoresizingMaskIntoConstraints = false
+        bottomBarViewContainer.isHidden = false
+        bottomBarViewContainer.addSubview(bottomBarView)
+        bottomBarView.translatesAutoresizingMaskIntoConstraints = false
 
-        bottomViewConstraints = [
-            bottomView.topAnchor.constraint(
-                equalTo: bottomViewContainer.layoutMarginsGuide.topAnchor
+        bottomBarViewConstraints = [
+            bottomBarView.topAnchor.constraint(
+                equalTo: bottomBarViewContainer.layoutMarginsGuide.topAnchor
             ),
-            bottomView.leadingAnchor.constraint(
-                equalTo: bottomViewContainer.layoutMarginsGuide.leadingAnchor
+            bottomBarView.leadingAnchor.constraint(
+                equalTo: bottomBarViewContainer.layoutMarginsGuide.leadingAnchor
             ),
-            bottomView.bottomAnchor.constraint(
-                equalTo: bottomViewContainer.layoutMarginsGuide.bottomAnchor
+            bottomBarView.bottomAnchor.constraint(
+                equalTo: bottomBarViewContainer.layoutMarginsGuide.bottomAnchor
             ),
-            bottomView.trailingAnchor.constraint(
-                equalTo: bottomViewContainer.layoutMarginsGuide.trailingAnchor
+            bottomBarView.trailingAnchor.constraint(
+                equalTo: bottomBarViewContainer.layoutMarginsGuide.trailingAnchor
             ),
         ]
-        NSLayoutConstraint.activate(bottomViewConstraints)
+        NSLayoutConstraint.activate(bottomBarViewConstraints)
     }
 
-    func updateBottomView() {
+    func updateBottomBarView() {
         guard isViewLoaded else { return }
-        updateBottomViewLayout()
+        updateBottomBarViewLayout()
     }
 }

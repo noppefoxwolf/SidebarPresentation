@@ -49,7 +49,7 @@ extension AlternativeSidebarViewController {
         UICollectionView.SupplementaryRegistration<UICollectionViewListCell>(
             elementKind: UICollectionView.elementKindSectionHeader
         ) { [weak self] supplementaryView, _, _ in
-            supplementaryView.contentConfiguration = self?.headerConfiguration
+            supplementaryView.contentConfiguration = self?.headerContentConfiguration
         }
     }
 
@@ -59,7 +59,7 @@ extension AlternativeSidebarViewController {
         UICollectionView.SupplementaryRegistration<UICollectionViewListCell>(
             elementKind: UICollectionView.elementKindSectionFooter
         ) { [weak self] supplementaryView, _, _ in
-            supplementaryView.contentConfiguration = self?.footerConfiguration
+            supplementaryView.contentConfiguration = self?.footerContentConfiguration
         }
     }
 
