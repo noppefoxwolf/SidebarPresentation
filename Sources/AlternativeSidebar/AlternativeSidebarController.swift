@@ -27,6 +27,9 @@ public final class AlternativeSidebarController: UIViewController {
 
         view.addInteraction(alternativeSidebarInstance.interaction)
         addChild(contentTabBarController)
+        // Size the child's root view before embedding it; see "Adding a Child View Controller":
+        // https://developer.apple.com/library/archive/featuredarticles/ViewControllerPGforiPhoneOS/ImplementingaContainerViewController.html
+        contentTabBarController.view.frame = view.bounds
         contentTabBarController.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(contentTabBarController.view)
         NSLayoutConstraint.activate([
