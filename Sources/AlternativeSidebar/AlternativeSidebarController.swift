@@ -27,6 +27,8 @@ public final class AlternativeSidebarController: UIViewController {
 
         view.addInteraction(alternativeSidebarInstance.interaction)
         addChild(contentTabBarController)
+        // Initialize at the container size before UIKit lays out the tab interface.
+        contentTabBarController.view.frame = view.bounds
         contentTabBarController.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(contentTabBarController.view)
         NSLayoutConstraint.activate([
