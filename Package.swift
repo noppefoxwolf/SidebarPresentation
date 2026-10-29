@@ -36,7 +36,6 @@ let package = Package(
             dependencies: [
                 "SidebarPresentation",
                 "InteractiveContainerPanGestureRecognizer",
-                "AlternativeSidebar",
             ]
         ),
     ]

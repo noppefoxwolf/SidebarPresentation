@@ -41,12 +41,6 @@ public final class AlternativeSidebarController: UIViewController {
         contentTabBarController.didMove(toParent: self)
     }
 
-    public override func viewIsAppearing(_ animated: Bool) {
-        super.viewIsAppearing(animated)
-
-        alternativeSidebarInstance.interaction.updateAvailability()
-    }
-
     public override func viewWillTransition(
         to size: CGSize,
         with coordinator: any UIViewControllerTransitionCoordinator

@@ -121,7 +121,8 @@ final class AlternativeSidebarInteraction: SidebarInteraction {
 
     @objc
     func updateAvailability() {
-        guard let tabBarController, tabBarController.isViewLoaded else {
+        guard let tabBarController else {
+            isEnabled = false
             return
         }
 
